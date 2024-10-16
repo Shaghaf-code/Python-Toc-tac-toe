@@ -20,16 +20,14 @@ BG_COLOR = (28, 170, 156)
 LINE_COLOR = (23, 145, 135)
 CIRCLE_COLOR = (239, 231, 200)
 CROSS_COLOR = (66, 66, 66)
-TEXT_COLOR = (255, 255, 255)
-RED_COLOR = (255, 0, 0)  # Color for winner's name
+RED_COLOR = (255, 0, 0)
 
 # Initialize the display
 screen = pygame.display.set_mode((WIDTH, HEIGHT + 100))
 pygame.display.set_caption('Tic Tac Toe by Shaghaf')
 
 # Font for text
-font = pygame.font.SysFont(None, 60)
-title_font = pygame.font.SysFont(None, 40)
+splash_font = pygame.font.SysFont(None, 80)
 winner_font = pygame.font.SysFont(None, 30)
 
 # Board setup
@@ -40,6 +38,7 @@ player = 1  # 1 for X, -1 for O
 
 # Game state
 game_over = False
+show_splash_screen = True
 winner_text = ""
 
 # Function to draw the grid
@@ -54,16 +53,11 @@ def draw_lines():
     pygame.draw.line(screen, LINE_COLOR, (SQUARE_SIZE, 0), (SQUARE_SIZE, HEIGHT), LINE_WIDTH)
     pygame.draw.line(screen, LINE_COLOR, (2 * SQUARE_SIZE, 0), (2 * SQUARE_SIZE, HEIGHT), LINE_WIDTH)
 
-# Function to draw title and winner name at the bottom
-def draw_bottom_text():
-    # Draw the game title
-    title_text = title_font.render('Tic Tac Toe by Shaghaf', True, TEXT_COLOR)
-    screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT + 10))
-
-    # Draw the winner's name if a winner exists
+# Function to draw winner name if a winner exists
+def draw_winner_text():
     if winner_text:
         winner_surface = winner_font.render(winner_text, True, RED_COLOR)
-        screen.blit(winner_surface, (WIDTH // 2 - winner_surface.get_width() // 2, HEIGHT + 50))
+        screen.blit(winner_surface, (WIDTH // 2 - winner_surface.get_width() // 2, HEIGHT + 10))
 
 # Function to draw X or O
 def draw_figures():
@@ -100,19 +94,32 @@ def set_winner_text(winner):
         winner_text = "Player X wins!"
     elif winner == -1:
         winner_text = "Player O wins!"
+    else:
+        winner_text = "It's a Draw!"
 
 # Reset the board
 def restart():
-    global board, player, game_over, winner_text
+    global board, player, game_over, winner_text, show_splash_screen
     board = [[None] * BOARD_COLS for _ in range(BOARD_ROWS)]
     player = 1
     game_over = False
     winner_text = ""
+    show_splash_screen = True
     draw_lines()
+
+# Function to display the splash screen
+def draw_splash_screen():
+    screen.fill(BG_COLOR)
+    splash_title = splash_font.render("Tic Tac Toe", True, (255, 255, 255))
+    by_text = splash_font.render("by Shaghaf", True, (255, 255, 255))
+    
+    screen.blit(splash_title, (WIDTH // 2 - splash_title.get_width() // 2, HEIGHT // 3))
+    screen.blit(by_text, (WIDTH // 2 - by_text.get_width() // 2, HEIGHT // 2))
+
+    pygame.display.update()
 
 # Main game loop
 draw_lines()
-draw_bottom_text()
 
 while True:
     for event in pygame.event.get():
@@ -120,7 +127,13 @@ while True:
             pygame.quit()
             sys.exit()
 
-        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
+        if show_splash_screen:
+            draw_splash_screen()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                show_splash_screen = False
+                draw_lines()
+
+        elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
             mouseX = event.pos[0]  # X coordinate
             mouseY = event.pos[1]  # Y coordinate
 
@@ -138,6 +151,9 @@ while True:
                     pygame.time.wait(2000)
                     restart()
 
+        elif game_over and event.type == pygame.MOUSEBUTTONDOWN:
+            restart()
+
     draw_figures()
-    draw_bottom_text()
+    draw_winner_text()
     pygame.display.update()
